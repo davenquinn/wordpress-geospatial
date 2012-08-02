@@ -1,0 +1,71 @@
+.clearfix {
+    zoom:1;
+    &:before, &:after {
+        content: "\0020";
+        display: block;
+        height: 0;
+        overflow: hidden;
+    }
+    &:after {
+        clear: both;
+    }
+}
+
+@mixin radius($topleft, $topright: $topleft, $bottomright: $topleft, $bottomleft: $topleft) {
+	-moz-border-radius: $topleft $topright $bottomright $bottomleft;
+    -webkit-border-radius: $topleft $topright $bottomright $bottomleft;
+    border-radius: $topleft $topright $bottomright $bottomleft;
+
+}
+
+#importPanel {
+	@extend .clearfix;
+	margin-bottom: 20px;
+	ul {
+		@extend .clearfix;
+		margin-bottom: 0;
+		li {
+			float: left;
+			margin-left: 20px;
+			margin-bottom: 0;
+			padding: 4px 8px;
+			a {
+				text-decoration: none;
+				color: black;
+				font-size: 1.4em;
+			}
+			&.active {
+				background: #87b4f8;
+			}
+			&:hover {
+				background: lighten(#87b4f8,10%);
+			}
+			&:first {
+				@include radius(8px, 0, 0, 0);
+			}
+			&:last {
+				@include radius(0, 8px, 0, 0);
+			}
+		}
+	}
+	div {
+		font-size: 2.2em;
+		line-height: 1.8em;
+		float: left;
+		input {
+			min-width: 500px;
+			padding: .5em 1em;
+		}
+		@include radius(8px);
+		padding: .3em .4em;
+		background: #87b4f8;
+	}
+	>input {
+		float: left;
+		font-size: 2.2em;
+		line-height: 1.8em;
+		padding: .5em 1em;
+		margin-left: 20px;
+		@include radius(8px);
+	}
+}

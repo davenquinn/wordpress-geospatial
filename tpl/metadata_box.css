@@ -1,0 +1,114 @@
+#geospatial_metabox_inside {
+  zoom: 1; }
+  #geospatial_metabox_inside:before, #geospatial_metabox_inside:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    overflow: hidden; }
+  #geospatial_metabox_inside:after {
+    clear: both; }
+  #geospatial_metabox_inside > :first-child {
+    margin-right: 10px; }
+  #geospatial_metabox_inside > div {
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    -webkit-background-clip: padding-box;
+    width: 49%;
+    float: left;
+    border: 1px solid #DFDFDF; }
+
+a.startEditing {
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-background-clip: padding-box;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  background-color: rgba(255, 255, 255, 0.4);
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 5000; }
+  a.startEditing span {
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-background-clip: padding-box;
+    display: block;
+    height: 22px;
+    width: 22px;
+    margin: 1px;
+    background: url("img/startEditing.png") no-repeat center;
+    background-color: rgba(0, 60, 136, 0.5); }
+    a.startEditing span:hover {
+      background-color: rgba(0, 60, 136, 0.7); }
+
+.olEditorControlEditorPanel {
+  background-color: rgba(0, 60, 136, 0.5);
+  border: none;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-background-clip: padding-box;
+  height: 28px;
+  top: 10px;
+  right: 10px; }
+  .olEditorControlEditorPanel .olControlSeparatorItemInactive.olButton {
+    background-color: transparent;
+    width: 0px; }
+  .olEditorControlEditorPanel .olButton {
+    margin: 4px;
+    background-color: rgba(255, 255, 255, 0.4);
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-background-clip: padding-box; }
+  .olEditorControlEditorPanel input {
+    border: none;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #fff;
+    float: right; }
+
+#map {
+  height: 300px; }
+  #map .olControlAttribution {
+    bottom: 3px; }
+  #map .zoomToExtent {
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-background-clip: padding-box; }
+    #map .zoomToExtent span {
+      width: 10px;
+      height: 10px;
+      display: block;
+      margin: 4px;
+      border: 2px dotted white;
+      position: relative;
+      top: 3.5px; }
+  #map.maximized {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 100000;
+    height: 100%;
+    width: 100%;
+    background: rgba(50, 50, 50, 0.5); }
+    #map.maximized .olMapViewport {
+      -moz-border-radius: 8px;
+      -webkit-border-radius: 8px;
+      border-radius: 8px;
+      -webkit-background-clip: padding-box;
+      top: 40px;
+      left: 40px; }
+      #map.maximized .olMapViewport .controls {
+        z-index: 1019; }
+    #map.maximized a.startEditing {
+      display: none; }
+
+#alert_panel {
+  max-height: 300px;
+  overflow: scroll; }

@@ -1,0 +1,56 @@
+.clearfix, #importPanel, #importPanel ul {
+  zoom: 1; }
+  .clearfix:before, #importPanel:before, #importPanel ul:before, .clearfix:after, #importPanel:after, #importPanel ul:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    overflow: hidden; }
+  .clearfix:after, #importPanel:after, #importPanel ul:after {
+    clear: both; }
+
+#importPanel {
+  margin-bottom: 20px; }
+  #importPanel ul {
+    margin-bottom: 0; }
+    #importPanel ul li {
+      float: left;
+      margin-left: 20px;
+      margin-bottom: 0;
+      padding: 4px 8px; }
+      #importPanel ul li a {
+        text-decoration: none;
+        color: black;
+        font-size: 1.4em; }
+      #importPanel ul li.active {
+        background: #87b4f8; }
+      #importPanel ul li:hover {
+        background: #b7d2fb; }
+      #importPanel ul li:first {
+        -moz-border-radius: 8px 0 0 0;
+        -webkit-border-radius: 8px 0 0 0;
+        border-radius: 8px 0 0 0; }
+      #importPanel ul li:last {
+        -moz-border-radius: 0 8px 0 0;
+        -webkit-border-radius: 0 8px 0 0;
+        border-radius: 0 8px 0 0; }
+  #importPanel div {
+    font-size: 2.2em;
+    line-height: 1.8em;
+    float: left;
+    -moz-border-radius: 8px 8px 8px 8px;
+    -webkit-border-radius: 8px 8px 8px 8px;
+    border-radius: 8px 8px 8px 8px;
+    padding: .3em .4em;
+    background: #87b4f8; }
+    #importPanel div input {
+      min-width: 500px;
+      padding: .5em 1em; }
+  #importPanel > input {
+    float: left;
+    font-size: 2.2em;
+    line-height: 1.8em;
+    padding: .5em 1em;
+    margin-left: 20px;
+    -moz-border-radius: 8px 8px 8px 8px;
+    -webkit-border-radius: 8px 8px 8px 8px;
+    border-radius: 8px 8px 8px 8px; }

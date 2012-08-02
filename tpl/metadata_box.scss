@@ -1,0 +1,125 @@
+@mixin borderRadius($radius: 5px) {	
+	-moz-border-radius: $radius;
+	-webkit-border-radius: $radius;
+	border-radius: $radius;
+	-webkit-background-clip: padding-box;
+}
+
+@mixin clearfix {
+    zoom:1;
+    &:before, &:after {
+        content: "\0020";
+        display: block;
+        height: 0;
+        overflow: hidden;
+    }
+    &:after {
+        clear: both;
+    }
+}
+
+#geospatial_metabox_inside {
+	@include clearfix;
+	&>:first-child {
+		margin-right: 10px;
+	}
+	&>div {
+		@include borderRadius(3px);
+		width: 49%;
+		float: left;
+		border: 1px solid #DFDFDF;
+	}
+}
+
+a.startEditing {
+	@include borderRadius(4px);
+	width: 24px;
+	height: 24px;
+	padding: 2px;
+	background-color: rgba(255,255,255, 0.4);
+	position: absolute;
+	right: 8px;
+	top: 8px;
+	z-index: 5000;
+	span {
+		@include borderRadius(4px);
+		display: block;
+		height: 22px;
+		width: 22px;
+		margin: 1px;
+		background: url("img/startEditing.png") no-repeat center;
+		background-color: rgba(0, 60, 136, 0.5);
+		&:hover {
+			background-color: rgba(0, 60, 136, 0.7);
+		}
+	}
+}
+
+.olEditorControlEditorPanel {
+	background-color: rgba(0, 60, 136, 0.5);
+	border: none;
+	@include borderRadius(4px);
+	height: 28px;
+	top: 10px;
+	right: 10px;
+	.olControlSeparatorItemInactive.olButton {
+		background-color: transparent;
+		width: 0px;
+	}
+	.olButton {
+		margin: 4px;
+		background-color: rgba(255,255,255, 0.4);
+		@include borderRadius(4px);
+	}
+	input {
+		border: none;
+		font-size: 1.2em;
+		font-weight: 600;
+		color: #fff;
+		float: right;
+	}
+}
+
+#map {
+	.olControlAttribution {
+		bottom: 3px;
+	}
+	height: 300px;
+	.zoomToExtent {
+		@include borderRadius(4px);
+		span {
+			width: 10px;
+			height: 10px;
+			display: block;
+			margin: 4px;
+			border: 2px dotted white;
+			position: relative;
+			top: 3.5px;
+		}
+	}
+	&.maximized {
+		position: fixed;
+		top: 0px;
+		left: 0px;
+		z-index: 100000;
+		height: 100%;
+		width: 100%;
+		background: rgba(50,50,50,.5);
+		.olMapViewport {
+			@include borderRadius(8px);
+			top: 40px;
+			left: 40px;
+			.controls {
+				z-index: 1019;
+			}
+		}
+		a.startEditing {
+			display: none;
+		}
+	}
+}
+
+#alert_panel {
+	max-height: 300px;
+	overflow: scroll;
+}
