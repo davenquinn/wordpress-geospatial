@@ -241,6 +241,9 @@ var geospatial = new function() {
 		        editor.editorPanel.cancelButton.on('click.edit-enabled', function(){
 		            editor.stop();
 		        });
+		        $(document).keyup(function(e) {
+  					if (e.keyCode == 27 & editor.editMode == true) editor.stop();   // esc					
+  				});
 	    	};
 
 	    	editor.stop = function(){
@@ -258,8 +261,10 @@ var geospatial = new function() {
     	this.map = _mapInit();
 		if (editorEnabled) {
 			this.map.editor = _editorInit(this.map);
-			this.map.editor.editLayer.destroyFeatures();
-			if (this.data.loaded) this.map.editor.editLayer.addFeatures(this.data.features);
+			if (this.data.loaded) {
+				this.map.editor.editLayer.destroyFeatures();
+				this.map.editor.editLayer.addFeatures(this.data.features);
+			}
 		}
 
 
