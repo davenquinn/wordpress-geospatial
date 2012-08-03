@@ -47,7 +47,7 @@ class PostGeometry {
 		else $enable = "FALSE";
 		// If this image hasn't got an id yet
 		if (is_null($this->id)) {
-			// Image not persisted yet - We do an insert
+			// Geometry not persisted yet - We do an insert
 			$query_string = "INSERT INTO ". GEOSPATIAL_TABLE_NAME . "(post_id, geom) values (". 
 				$wpdb->escape($this->post_id).", ".
 				"GeomFromText('".$wpdb->escape($insert_string)."'))";
@@ -56,7 +56,7 @@ class PostGeometry {
 			// Additionally we want the primary id in case we need it afterwards
 			$this->id = $wpdb->get_var('SELECT LAST_INSERT_ID() as id');
 		} else {
-			// We have this image already - We do an update
+			// We have this geometry already - We do an update
 			$query_string = "UPDATE ". GEOSPATIAL_TABLE_NAME." SET ".
 				"geom = GeomFromText('".$wpdb->escape($insert_string)."') ".
 				"WHERE id = " . $this->id .";";

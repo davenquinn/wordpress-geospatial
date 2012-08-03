@@ -66,7 +66,8 @@ class GeospatialAdmin {
 				return $post_id;
 
 		    // make sure data came from our meta box
-		    if (!wp_verify_nonce($_POST['geospatial_noncename'],'geospatial_postadmin_nonce')) return $post_id;
+		    if (!wp_verify_nonce($_POST['geospatial_noncename'],'geospatial_postadmin_nonce'))
+		    	return $post_id;
 		    // check user permissions
 		    if ($_POST['post_type'] == 'page') {
 		        if (!current_user_can('edit_page', $post_id)) return $post_id;
