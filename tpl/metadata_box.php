@@ -31,20 +31,18 @@ else $wkt = null;
 jQuery(document).ready(function($){
     
     txt = $('input[name=geospatial_wkt]').val();
-    console.log("Trying");
-    console.log(txt);
-    geospatial.data.in(txt);
-    console.log("Still working");
-    geospatial.createMap('map', true);
-    console.log("Done");
+    var data = new Geospatial.Data();
+    data.in(txt);
+
+    window.mapa = new Geospatial.Map('map', data, true);
 
     $('input[name=geospatial_import]').click(function(){
-        url = $('input[name=geospatial_import_url]').val() + "&output=kml";
+        url = $('input[name=geospatial_import_url]').val();
         google_maps_import(url);
     });
 
     $('input[name=geospatial_edit]').click(function(){
-        geospatial.map.editor.start();
+        //window.mapa.editor.start();
     });
 
     $('input[name=geospatial_delete]').click(function(){

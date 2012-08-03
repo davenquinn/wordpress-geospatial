@@ -1,40 +1,6 @@
 var proj = new OpenLayers.Projection("EPSG:4326");
 var $ = jQuery;
 
-function google_maps_import(url) {
-	nonce = $('input#geospatial_noncename').val();
-    $.ajax({
-        url: ajaxurl,
-         data: { 
-            action: 'geospatial-google-import',
-            url: url,
-            nonce: nonce
-         },
-         type: 'post',
-         success: function(output) {
-            parseWKT(output);
-            $('#alert_panel').html("Successfully added layer.");
-        }
-    });
-    return false;
-}
-
-
-
-function parseWKT(input) {
-	var wkt = new OpenLayers.Format.WKT();
-    var features = wkt.read(input);
-    console.log(input);
-    if(features) {
-        geospatial.map.editor.editLayer.destroyFeatures();
-        geospatial.map.editor.editLayer.addFeatures(features);
-        //updateTextField();
-        //geospatial.map.zoomFit();
-    } else {
-        alert('Bad WKT');
-    }
-}
-
 document.scroll = new function() {
 	this.locked = false;
 
@@ -67,72 +33,76 @@ document.scroll = new function() {
 
 };
 
-OpenLayers.Map.prototype.maximized = false;
-OpenLayers.Map.prototype.popOut = function() {
-	var $ = jQuery;
-	if (this.maximized) return false;
-
-	$(this.div).addClass("maximized");
-
-	document.scroll.lock();
-
-    h = $(window).height();
-    w = $(window).width();
-    $(this.viewPortDiv).height(h-80).width(w-80);
-
-    this.updateSize();
-
-    $(window).on('resize.map-maximized', function() {
-    	console.log('resized');
-        h = $(window).height();
-    	w = $(window).width();
-    	$(this.viewPortDiv).height(h-80).width(w-80);
-    });
-   	this.maximized = true;
-
-};
-OpenLayers.Map.prototype.popIn = function () {
-	var $ = jQuery;
-	if (!this.maximized) return false;
-	$(this.div).removeClass("maximized");
-    $(this.viewPortDiv).width("inherit").height("inherit");
-    $(window).off('resize.map-maximized');
-    this.updateSize();
-    this.maximized = false;
-};
-
-OpenLayers.Editor.Control.EditorPanel.prototype._filterDraw = function() {
-	div = jQuery(this.div);
-	cancel = "<input class='olButton cancel' type='button' value='Cancel' />";
-	done = "<input class='olButton done' type='button' value='Done' />";
-	separator = "<div class='olControlSeparatorItemInactive olButton'></div>";
-	div.prepend(cancel+done+separator);
-	this.cancelButton = div.children(".olButton.cancel");
-	this.doneButton = div.children(".olButton.done");
-
-};
-
-var geospatial = new function() {
+var Geospatial = new function() {
 	var $ = jQuery;
 	OpenLayers.Lang.setCode('en');
-    OpenLayers.Layer.Vector.prototype.renderers = ["SVG2", "VML", "Canvas"]; 
-	this.map = null;
+    OpenLayers.Layer.Vector.prototype.renderers = ["SVG2", "VML", "Canvas"];
 	this.basemapRenderer = new OpenLayers.Layer.OSM();
 
 	//new OpenLayers.Layer.Google("Google Physical",{type: google.maps.MapTypeId.TERRAIN}));
 
-	this.admin = new function() {
+	this.Admin = function() {
 
 	}
 
-    this.data = new function() {
+    this.Data = function() {
+    	$ = jQuery;
+    	parent = this;
+    	this.map = false;
+    	this.update = function(output) {
+    		var wkt = new OpenLayers.Format.WKT();
+    		features = wkt.read(input);
+    		if(features) {
+    			$('input[name=geospatial_wkt]').html(output);
+    			parent.features = features;
+    			if (this.map) {
+    				this.map.updateData(features);
+    			}
+			} else {
+			   	alert("Bad WKT");
+			}
+    	};
+    	this.import = new function() {
+    		parent = this;
+    		this.google_maps = function(url){
+    			nonce = $('input#geospatial_noncename').val();
+			    $.ajax({
+			        url: ajaxurl,
+			         data: { 
+			            action: 'geospatial-google-import',
+			            url: url,
+			            nonce: nonce
+			         },
+			         type: 'post',
+			         success: function(output) {
+			    		parent.parent.update(output);
+			            $('#alert_panel').html("Successfully added layer.");
+			        }
+			    });
+			    return false;
+    		};
+    	}
+    	this.import.prototype = {
+    		parseWKT: function() {
+				var wkt = new OpenLayers.Format.WKT();
+			    var features = wkt.read(input);
+			   	console.log(features);
+			    if(features) {
+			        geospatial.map.editor.editLayer.destroyFeatures();
+			        geospatial.map.editor.editLayer.addFeatures(features);
+			        geospatial.map.zoomFit();
+			        $('input[name=geospatial_wkt]').html(wkt);
+			    } else {
+			        alert('Bad WKT');
+			    }
+    		}
+    	};
 		var wktParser =  new OpenLayers.Format.WKT({
 			'externalProjection': new OpenLayers.Projection("EPSG:4326"),
 			'internalProjection': new OpenLayers.Projection("EPSG:900913")
 		});
 		this.loaded = false;
 		this.in = function(input) {
-			console.log(input);
 	        this.features = wktParser.read(input);
 	        if(!this.features) return;
 	        if(this.features.constructor != Array) {
@@ -163,113 +133,161 @@ var geospatial = new function() {
 		};
 	};
 
-	this.createMap = function(mapDiv, editorEnabled) {
-		if(typeof(editorEnabled)==='undefined') editorEnabled = false;
+
+	this.Map = function (mapDiv, data, editorEnabled) {
+		$ = jQuery;
 		var parent = this;
+		if(typeof(editorEnabled)==='undefined') editorEnabled = false;
+		bounds = new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34);
+		OpenLayers.Map.call(this, mapDiv, {
+			maxExtent: bounds,
+			controls: [
+				new OpenLayers.Control.Zoom(),
+				new OpenLayers.Control.Navigation({
+		            dragPanOptions: {
+		                enableKinetic: true
+		            }
+			    }),
+			]
+		});
+		
+		this.data = data;
+		this.data.map = this;
+		this.editorEnabled = editorEnabled;
+		
 
-		var _mapInit = function() {
-			var $ = jQuery;
-			
-			var map = new OpenLayers.Map(mapDiv, {
-	        	maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
-	    	});
-	    	//map.dataLayer = new OpenLayers.Layer.Vector("DataLayer");
-	    	//map.addLayer(map.dataLayer);
-	    	//map.dataLayer.addFeatures(parent.data.features);
-
-
-			map.zoomFit = function() {
-
-				if (!parent.data.loaded) return;
-
-				map.zoomToExtent(parent.data.bounds);
-			};
-
-	    	var _createZoomControl = function() {
-				zoomControl = $(map.viewPortDiv).children('.olControlZoom');
-				zoomControl.append("<a class='zoomToExtent olButton'><span></span></a>");
-				zoomToBounds = zoomControl.children('a.zoomToExtent');
-				zoomToBounds.click(function(){
-					map.zoomFit();
-				});
-	    	};
-	    	_createZoomControl();
-	    	map.addLayer(parent.basemapRenderer);
-	    	map.zoomFit();
-
-	    	return map;			
-		};
-
-		var _editorInit = function(map) {
-			var $ = jQuery;
-
-	    	var editor = new OpenLayers.Editor(map, {
-	        	activeControls: ['Navigation', 'SnappingSettings', 'Separator', 'DeleteFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature'],
-	        	featureTypes: ['polygon', 'path', 'point']
-	    	});
-	    	//editor.editLayer = editor.map.dataLayer;
-	    	//editor.editLayer.refresh();
-
-	    	var _createEditControl = function() {
-	    		viewport = $(map.viewPortDiv);
-				editControl = viewport.append("<a class='startEditing'><span></span></a>");
-				editor.editControl = viewport.children('.startEditing');
-				editor.editControl.click(function(){
-					editor.start();
-				});
-	    	};
-
-			editor.editorPanel.draw = function() {
-	        	OpenLayers.Editor.Control.EditorPanel.prototype.draw.apply(this, arguments);
-	        	editor.editorPanel._filterDraw();
-	       		return this.div;
-		    };
-
-			editor.editorPanel.redraw = function() {
-	        	OpenLayers.Editor.Control.EditorPanel.prototype.redraw.apply(this, arguments);
-	        	editor.editorPanel._filterDraw();
-	       		return this.div;
-		    };
-
-	    	editor.start = function() {
-	    		editor.map.popOut();
-		       	editor.startEditMode();
-
-		        editor.editorPanel.doneButton.on('click.edit-enabled', function(){
-		            editor.stop();
-		        });
-		        editor.editorPanel.cancelButton.on('click.edit-enabled', function(){
-		            editor.stop();
-		        });
-		        $(document).keyup(function(e) {
-  					if (e.keyCode == 27 & editor.editMode == true) editor.stop();   // esc					
-  				});
-	    	};
-
-	    	editor.stop = function(){
-			   	editor.stopEditMode();
-			   	editor.editorPanel.doneButton.off('click.edit-enabled');
-			   	editor.editorPanel.cancelButton.off('click.edit-enabled');
-			   	editor.map.popIn();
-	    	};
-
-	    	_createEditControl();
-	    	return editor;
-    	};
-
-
-    	this.map = _mapInit();
-		if (editorEnabled) {
-			this.map.editor = _editorInit(this.map);
-			if (this.data.loaded) {
-				this.map.editor.editLayer.destroyFeatures();
-				this.map.editor.editLayer.addFeatures(this.data.features);
+		if (this.editorEnabled) {
+			this.editor = new this.Editor(this);
+			this.dataLayer = this.editor.editLayer;
+			if (data.loaded) {
+				this.updateData(data.features);
 			}
+		} else {
+		    this.dataLayer = new OpenLayers.Layer.Vector("DataLayer");
+		    this.addLayer(this.dataLayer);
+		    this.dataLayer.addFeatures(data.features);
 		}
+    	    	
+    	zoomControl = $(this.viewPortDiv).children('.olControlZoom');
+		zoomControl.append("<a class='zoomToExtent olButton'><span></span></a>");
+		zoomToBounds = zoomControl.children('a.zoomToExtent');
+		zoomToBounds.click(function(){
+			parent.zoomFit();
+		});
 
+    	this.addLayer(Geospatial.basemapRenderer);
+    	this.setCenter(new OpenLayers.LonLat(0, 7000000),4);
 
-        return this.map;
+    	this.zoomFit();
+
 
 	};
+	this.Map.prototype = jQuery.extend(new OpenLayers.Map(), {
+		data: {loaded: false}, // Temporary; should be a data object.
+		editorEnabled: false,
+		maximized: false,
+		zoomFit: function() {
+			if (!this.data.loaded) return false;
+			this.zoomToExtent(this.data.bounds);
+		},
+		updateData: function(features){
+			this.dataLayer.destroyFeatures();
+			this.dataLayer.addFeatures(features);
+		},
+		popOut: function() {
+			var $ = jQuery;
+			if (this.maximized) return false;
+
+			$(this.div).addClass("maximized");
+
+			document.scroll.lock();
+
+		    h = $(window).height();
+		    w = $(window).width();
+		    $(this.viewPortDiv).height(h-80).width(w-80);
+
+		    this.updateSize();
+
+		    $(window).on('resize.map-maximized', function() {
+		    	console.log('resized');
+		        h = $(window).height();
+		    	w = $(window).width();
+		    	$(this.viewPortDiv).height(h-80).width(w-80);
+		    });
+		   	this.maximized = true;
+
+		},
+		popIn: function () {
+			var $ = jQuery;
+			if (!this.maximized) return false;
+			$(this.div).removeClass("maximized");
+		    $(this.viewPortDiv).width("inherit").height("inherit");
+		    $(window).off('resize.map-maximized');
+		    document.scroll.unlock();
+		    this.updateSize();
+		    this.maximized = false;
+		},
+		
+
+	});
+
+	this.Map.prototype.Editor = function (map) {
+		$ = jQuery;
+		parent = this;
+		OpenLayers.Editor.call(this, map, {
+	        activeControls: ['Navigation', 'SnappingSettings', 'Separator', 'DeleteFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature'],
+	        featureTypes: ['polygon', 'path', 'point']
+	    });
+		viewport = $(map.viewPortDiv);
+		editControl = viewport.append("<a class='startEditing'><span></span></a>");
+		this.editControl = viewport.children('.startEditing');
+		this.editControl.click(function(){
+			parent.start();
+		});
+
+		this.editorPanel.filterDraw = function() {
+			div = jQuery(this.div);
+			cancel = "<input class='olButton cancel' type='button' value='Cancel' />";
+			done = "<input class='olButton done' type='button' value='Done' />";
+			separator = "<div class='olControlSeparatorItemInactive olButton'></div>";
+			div.prepend(cancel+done+separator);
+			this.cancelButton = div.children(".olButton.cancel");
+			this.doneButton = div.children(".olButton.done");
+		};
+
+		this.editorPanel.draw = function() {
+        	OpenLayers.Editor.Control.EditorPanel.prototype.draw.apply(this, arguments);
+        	this._filterDraw();
+       		return this.div;
+	    };
+		this.editorPanel.redraw = function() {
+        	OpenLayers.Editor.Control.EditorPanel.prototype.redraw.apply(this, arguments);
+        	this._filterDraw();
+       		return this.div;
+	    };
+
+	};
+	this.Map.prototype.Editor.prototype = jQuery.extend(new OpenLayers.Editor(), {
+		start: function() {
+    		this.map.popOut();
+	       	this.startEditMode();
+
+	        this.editorPanel.doneButton.on('click.edit-enabled', function(){
+	            parent.stop();
+	        });
+	        this.editorPanel.cancelButton.on('click.edit-enabled', function(){
+	            parent.stop();
+	        });
+	        $(document).keyup(function(e) {
+				if (e.keyCode == 27 & this.editMode == true) parent.stop();   // esc	
+			});
+    	},
+		stop: function(){
+		   	this.stopEditMode();
+		   	this.editorPanel.doneButton.off('click.edit-enabled');
+		   	this.editorPanel.cancelButton.off('click.edit-enabled');
+		   	this.map.popIn();
+    	}
+	});
 
 }
