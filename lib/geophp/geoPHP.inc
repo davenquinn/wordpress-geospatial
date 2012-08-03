@@ -18,6 +18,8 @@ include_once("lib/adapters/KML.class.php");
 include_once("lib/adapters/GPX.class.php");
 include_once("lib/adapters/GeoRSS.class.php");
 include_once("lib/adapters/GoogleGeocode.class.php");
+include_once("lib/adapters/EncodedPolyline.class.php");
+
 
 // Geometries
 include_once("lib/geometry/Geometry.class.php"); // Abtract class
@@ -83,6 +85,7 @@ class geoPHP
       'gpx' =>  'GPX',
       'georss' => 'GeoRSS',
       'google_geocode' => 'GoogleGeocode',
+      'encoded_polyline' => 'EncodedPolyline',
     );
   }
   

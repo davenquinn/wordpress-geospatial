@@ -314,13 +314,26 @@ function decodePolylineToArray($encoded)
 }
 
 class EncodedPolyline extends GeoAdapter {
-	public function read($encodedPolyline) {
-
+	public function read($input) {
+		$array = decodePolylineToArray($input);
+		return $this->arrayToLineString($array);
 	}
 
-	public function write() {
+	public function write(Geometry $geometry) {
 		$encoder = new PolylineEncoder();
-		return $encoder->encode($points);
+		return $encoder->encode($geometry->asArray());
+	}
+
+	private function arrayToPoint($array) {
+		return new Point($array[0], $array[1]);
+	}
+
+	private function arrayToLineString($array) {
+		$points = array();
+		foreach ($array as $comp_array) {
+			$points[] = $this->arrayToPoint($comp_array);
+		}
+		return new LineString($points);
 	}
 }
 
