@@ -45,24 +45,28 @@ var Geospatial = new function() {
 
 	}
 
-    this.Data = function() {
+    this.Data = function(input, format) {
     	$ = jQuery;
     	parent = this;
     	this.map = false;
-    	this.update = function(output) {
-    		var wkt = new OpenLayers.Format.WKT();
-    		features = wkt.read(input);
+    	if (input !== "") this.in(input, format);
+    	this.updateFromWKT = function(output) {
+    		//var wkt = new OpenLayers.Format.WKT();
+    		features = this.wktParser.read(output);
     		if(features) {
-    			$('input[name=geospatial_wkt]').html(output);
-    			parent.features = features;
+    			this.update(features);
+    			//this.features = features;
+    			//this.computeBounds();
     			if (this.map) {
     				this.map.updateData(features);
+    				this.map.zoomFit();
     			}
 			} else {
 			   	alert("Bad WKT");
 			}
     	};
     	this.import = new function() {
+    		this.parent = parent;
     		parent = this;
     		this.google_maps = function(url){
     			nonce = $('input#geospatial_noncename').val();
@@ -75,7 +79,7 @@ var Geospatial = new function() {
 			         },
 			         type: 'post',
 			         success: function(output) {
-			    		parent.parent.update(output);
+			    		parent.parent.updateFromWKT(output);
 			            $('#alert_panel').html("Successfully added layer.");
 			        }
 			    });
@@ -86,39 +90,29 @@ var Geospatial = new function() {
     		parseWKT: function() {
 				var wkt = new OpenLayers.Format.WKT();
 			    var features = wkt.read(input);
-			   	console.log(features);
 			    if(features) {
 			        geospatial.map.editor.editLayer.destroyFeatures();
 			        geospatial.map.editor.editLayer.addFeatures(features);
 			        geospatial.map.zoomFit();
-			        $('input[name=geospatial_wkt]').html(wkt);
+			        $('input[name=geospatial_wkt]').html(input);
 			    } else {
 			        alert('Bad WKT');
 			    }
     		}
     	};
-		var wktParser =  new OpenLayers.Format.WKT({
+	};
+	this.Data.prototype = {
+		wktParser: new OpenLayers.Format.WKT({
 			'externalProjection': new OpenLayers.Projection("EPSG:4326"),
 			'internalProjection': new OpenLayers.Projection("EPSG:900913")
-		});
-		this.loaded = false;
-		this.in = function(input) {
-	        this.features = wktParser.read(input);
-	        if(!this.features) return;
-	        if(this.features.constructor != Array) {
-	            this.features = [this.features];
-	        }
-	        this.loaded = true;
-			this.computeBounds();
-		};
-
-		this.out = function() {
+		}),
+		JSONParser: new OpenLayers.Format.GeoJSON({
+			'externalProjection': new OpenLayers.Projection("EPSG:4326"),
+			'internalProjection': new OpenLayers.Projection("EPSG:900913")
+		}),
+		computeBounds: function() {
 			features = this.features;
-			if (features.length === 1) features = features[0];
-			return wktParser.write(features);
-		};
-		this.computeBounds = function() {
-			features = this.features;
+			console.log(this.features);
 			if (features == "") {
 				this.bounds = "";
 				return;
@@ -130,14 +124,118 @@ var Geospatial = new function() {
 				    this.bounds.extend(features[i].geometry.getBounds());
 				}
 			}
-		};
+			console.log(this.bounds);
+		},
+		update: function(features) {
+			if(features.constructor != Array) {
+	            features = [features];
+	        }
+			this.features = features;
+			/*if (this.map && this.map.features !== this.features) {
+				this.map.updateData(features);
+			}*/
+			this.computeBounds();
+			wkt = this.out();
+			field = jQuery('input[name=geospatial_wkt]')
+			field.val(wkt);
+		},
+		in: function(input, format) {
+			if (typeof(format)==="undefined") format="wkt";
+			this.loaded = true;
+			switch(format) {
+				case "wkt":
+					this.features = this.wktParser.read(input);
+					break;
+				case "json":
+					this.features = this.JSONParser.read(input);
+					break;
+			}
+	        if(!this.features) return;
+	        if(this.features.constructor != Array) {
+	            this.features = [this.features];
+	        }
+			this.computeBounds();
+		},
+		out: function() {
+			features = this.features;
+			if (features.length === 1) features = features[0];
+			out = this.wktParser.write(features);
+			return out;
+		}
+
 	};
 
 
 	this.Map = function (mapDiv, data, editorEnabled) {
-		$ = jQuery;
-		var parent = this;
 		if(typeof(editorEnabled)==='undefined') editorEnabled = false;
+		if (editorEnabled) {
+			this.Editor = function (map) {
+				$ = jQuery;
+				parent = this;
+				OpenLayers.Editor.call(this, map, {
+			        activeControls: ['Navigation', 'SnappingSettings', 'Separator', 'DeleteFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature'],
+			        featureTypes: ['polygon', 'path', 'point']
+			    });
+				viewport = $(map.viewPortDiv);
+				editControl = viewport.append("<a class='startEditing'><span></span></a>");
+				this.editControl = viewport.children('.startEditing');
+				this.editControl.click(function(){
+					parent.start();
+				});
+
+				this.editorPanel.filterDraw = function() {
+					div = jQuery(this.div);
+					cancel = "<input class='olButton cancel' type='button' value='Cancel' />";
+					done = "<input class='olButton done' type='button' value='Done' />";
+					separator = "<div class='olControlSeparatorItemInactive olButton'></div>";
+					div.prepend(cancel+done+separator);
+					this.cancelButton = div.children(".olButton.cancel");
+					this.doneButton = div.children(".olButton.done");
+					jQuery(".olButton.done").on('click.editor-enabled', function(){
+			            parent.stop();
+			            parent.save();
+			        });
+			       	jQuery(".olButton.cancel").on('click.editor-enabled', function(){
+			            parent.stop();
+			        });
+			        $(document).keyup(function(e) {
+						if (e.keyCode == 27 & this.editMode == true) parent.stop();   // esc	
+					});
+				};
+
+				this.editorPanel.draw = function() {
+			    	OpenLayers.Editor.Control.EditorPanel.prototype.draw.apply(this, arguments);
+			    	this.filterDraw();
+			   		return this.div;
+			    };
+				this.editorPanel.redraw = function() {
+			    	OpenLayers.Editor.Control.EditorPanel.prototype.redraw.apply(this, arguments);
+			    	this.filterDraw();
+			   		return this.div;
+			    };
+
+			};
+
+			this.Editor.prototype = jQuery.extend(new OpenLayers.Editor(), {
+				start: function() {
+					this.map.popOut();
+			       	this.startEditMode();
+			        
+				},
+				stop: function(){
+				   	this.stopEditMode();
+				   	this.editorPanel.doneButton.off('click.editor-enabled');
+				   	this.editorPanel.cancelButton.off('click.editor-enabled');
+				   	this.map.popIn();
+				},
+				save:function() {
+					features = this.editLayer.features;
+					this.map.data.update(features);
+				}
+			});
+		}
+
+		$ = jQuery;
 		bounds = new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34);
 		OpenLayers.Map.call(this, mapDiv, {
 			maxExtent: bounds,
@@ -155,19 +253,20 @@ var Geospatial = new function() {
 		this.data.map = this;
 		this.editorEnabled = editorEnabled;
 		
-
 		if (this.editorEnabled) {
 			this.editor = new this.Editor(this);
 			this.dataLayer = this.editor.editLayer;
-			if (data.loaded) {
-				this.updateData(data.features);
+			if (this.data.loaded) {
+				this.dataLayer.features = this.data.features;
 			}
 		} else {
 		    this.dataLayer = new OpenLayers.Layer.Vector("DataLayer");
 		    this.addLayer(this.dataLayer);
-		    this.dataLayer.addFeatures(data.features);
+
+		    this.dataLayer.addFeatures(this.data.features);
 		}
-    	    	
+
+    	var parent = this;
     	zoomControl = $(this.viewPortDiv).children('.olControlZoom');
 		zoomControl.append("<a class='zoomToExtent olButton'><span></span></a>");
 		zoomToBounds = zoomControl.children('a.zoomToExtent');
@@ -176,8 +275,7 @@ var Geospatial = new function() {
 		});
 
     	this.addLayer(Geospatial.basemapRenderer);
-    	this.setCenter(new OpenLayers.LonLat(0, 7000000),4);
-
+    	
     	this.zoomFit();
 
 
@@ -187,12 +285,17 @@ var Geospatial = new function() {
 		editorEnabled: false,
 		maximized: false,
 		zoomFit: function() {
-			if (!this.data.loaded) return false;
-			this.zoomToExtent(this.data.bounds);
+			if (this.data.bounds == "" || typeof(this.data.bounds) ==="undefined") {
+    			this.setCenter(new OpenLayers.LonLat(0, 0),0);
+			} else {
+				this.zoomToExtent(this.data.bounds);
+			}
 		},
-		updateData: function(features){
+		updateData: function(features) {
 			this.dataLayer.destroyFeatures();
 			this.dataLayer.addFeatures(features);
+			//this.dataLayer.features = features;
+			//this.dataLayer.redraw({force: true});
 		},
 		popOut: function() {
 			var $ = jQuery;
@@ -209,7 +312,6 @@ var Geospatial = new function() {
 		    this.updateSize();
 
 		    $(window).on('resize.map-maximized', function() {
-		    	console.log('resized');
 		        h = $(window).height();
 		    	w = $(window).width();
 		    	$(this.viewPortDiv).height(h-80).width(w-80);
@@ -226,68 +328,8 @@ var Geospatial = new function() {
 		    document.scroll.unlock();
 		    this.updateSize();
 		    this.maximized = false;
-		},
-		
-
+		}
 	});
-
-	this.Map.prototype.Editor = function (map) {
-		$ = jQuery;
-		parent = this;
-		OpenLayers.Editor.call(this, map, {
-	        activeControls: ['Navigation', 'SnappingSettings', 'Separator', 'DeleteFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature'],
-	        featureTypes: ['polygon', 'path', 'point']
-	    });
-		viewport = $(map.viewPortDiv);
-		editControl = viewport.append("<a class='startEditing'><span></span></a>");
-		this.editControl = viewport.children('.startEditing');
-		this.editControl.click(function(){
-			parent.start();
-		});
-
-		this.editorPanel.filterDraw = function() {
-			div = jQuery(this.div);
-			cancel = "<input class='olButton cancel' type='button' value='Cancel' />";
-			done = "<input class='olButton done' type='button' value='Done' />";
-			separator = "<div class='olControlSeparatorItemInactive olButton'></div>";
-			div.prepend(cancel+done+separator);
-			this.cancelButton = div.children(".olButton.cancel");
-			this.doneButton = div.children(".olButton.done");
-		};
-
-		this.editorPanel.draw = function() {
-        	OpenLayers.Editor.Control.EditorPanel.prototype.draw.apply(this, arguments);
-        	this._filterDraw();
-       		return this.div;
-	    };
-		this.editorPanel.redraw = function() {
-        	OpenLayers.Editor.Control.EditorPanel.prototype.redraw.apply(this, arguments);
-        	this._filterDraw();
-       		return this.div;
-	    };
-
-	};
-	this.Map.prototype.Editor.prototype = jQuery.extend(new OpenLayers.Editor(), {
-		start: function() {
-    		this.map.popOut();
-	       	this.startEditMode();
-
-	        this.editorPanel.doneButton.on('click.edit-enabled', function(){
-	            parent.stop();
-	        });
-	        this.editorPanel.cancelButton.on('click.edit-enabled', function(){
-	            parent.stop();
-	        });
-	        $(document).keyup(function(e) {
-				if (e.keyCode == 27 & this.editMode == true) parent.stop();   // esc	
-			});
-    	},
-		stop: function(){
-		   	this.stopEditMode();
-		   	this.editorPanel.doneButton.off('click.edit-enabled');
-		   	this.editorPanel.cancelButton.off('click.edit-enabled');
-		   	this.map.popIn();
-    	}
-	});
-
 }
+
+

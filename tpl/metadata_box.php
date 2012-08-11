@@ -30,15 +30,14 @@ else $wkt = null;
 
 jQuery(document).ready(function($){
     
-    txt = $('input[name=geospatial_wkt]').val();
-    var data = new Geospatial.Data();
-    data.in(txt);
+    wkt = $('input[name=geospatial_wkt]').val();
+    var data = new Geospatial.Data(wkt);
 
-    window.mapa = new Geospatial.Map('map', data, true);
+    window.gmap = new Geospatial.Map('map', data, true);
 
     $('input[name=geospatial_import]').click(function(){
         url = $('input[name=geospatial_import_url]').val();
-        google_maps_import(url);
+        data.import.google_maps(url);
     });
 
     $('input[name=geospatial_edit]').click(function(){
