@@ -315,6 +315,7 @@ function decodePolylineToArray($encoded)
 
 class EncodedPolyline extends GeoAdapter {
 	public function read($input) {
+		$input = str_replace("\\\\", '\\', $input);
 		$array = decodePolylineToArray($input);
 		return $this->arrayToLineString($array);
 	}
@@ -325,7 +326,7 @@ class EncodedPolyline extends GeoAdapter {
 	}
 
 	private function arrayToPoint($array) {
-		return new Point($array[0], $array[1]);
+		return new Point($array[1], $array[0]);
 	}
 
 	private function arrayToLineString($array) {
