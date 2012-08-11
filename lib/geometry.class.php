@@ -43,8 +43,6 @@ class PostGeometry {
 		global $wpdb;
 
 		$insert_string = $this->geom->out('wkt');
-		if ($this->enable) $enable = "TRUE";
-		else $enable = "FALSE";
 		// If this image hasn't got an id yet
 		if (is_null($this->id)) {
 			// Geometry not persisted yet - We do an insert
