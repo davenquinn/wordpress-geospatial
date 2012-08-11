@@ -8,6 +8,15 @@
   .clearfix:after, #importPanel:after, #importPanel ul:after {
     clear: both; }
 
+#alert_panel {
+  padding: 10px;
+  border: 1px solid #999;
+  overflow: scroll; }
+  #alert_panel.ok {
+    background-color: lightgreen; }
+  #alert_panel.error {
+    background-color: #CC3333; }
+
 #importPanel {
   margin-bottom: 20px; }
   #importPanel ul {

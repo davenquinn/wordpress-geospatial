@@ -18,6 +18,18 @@
 
 }
 
+#alert_panel {
+	padding: 10px;
+	border: 1px solid #999;
+	overflow: scroll;
+	&.ok {
+		background-color: lightgreen;
+	}
+	&.error {
+		background-color: #CC3333;
+	}
+}
+
 #importPanel {
 	@extend .clearfix;
 	margin-bottom: 20px;
